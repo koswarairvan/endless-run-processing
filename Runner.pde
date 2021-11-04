@@ -11,9 +11,11 @@ int jumpTime = 0;
 int diff=14;
 int x1=0;
 ArrayList<PVector> boxes = new ArrayList<PVector>();
-PImage runner;
+ArrayList<PVector> clouds = new ArrayList<PVector>();
+PImage[] runner= new PImage[3];
+PImage bg,awan;
 int w=600,h=400,posisi=w/2;
-
+int frame;
 Player b = new Player();
 class Player{
   PVector pos; //posisi karakter
@@ -26,23 +28,30 @@ class Player{
   acc = new PVector(0,1);
   }
   void tampil(){
-    image(runner,pos.x,pos.y,50,50);
+    image(runner[frame],pos.x,pos.y,55,55);
+    if(frameCount%4==0){frame++;}
+    if (frame>2){
+    frame=0;
+    }
   }
 }
 
 void setup(){
   
     size(600,400);
-    background(0);
     frameRate(60);
     rectMode(CENTER);
     textAlign(CENTER);
-    runner = loadImage("Trex.png");
-  
+    for(int i=0;i<runner.length;i++){
+      runner [i]= loadImage("Trex"+(i+1)+".png");
+    }
+    bg=loadImage("bg.png");
+    awan=loadImage("cloud.png");
 }
 
 void draw(){
     background(0);
+    image(bg,0,0,width,305);
     fill(255);
     textSize(10);
     text("KEY PRESS=JUMP", w - 70, 20);
@@ -50,12 +59,32 @@ void draw(){
     text("SCORE: " + int(frameCount / 10), 40, 20);
     drawBackgroundGrid();
     
+    if (random(1) <= 0.05) {
+        //membuat objek baru dari rintangan
+        PVector cloud = new PVector(width, random(100));
+        //memasukkan objek tadi ke arraylist kumpulan rintangan
+        clouds.add(cloud);
+    }
     if (random(1) <= 0.01) {
         //membuat objek baru dari rintangan
         PVector box = new PVector( width, 80 + height / 2);
-        fill(255);
         //memasukkan objek tadi ke arraylist kumpulan rintangan
         boxes.add(box);
+    }
+    
+    if (clouds.size() != 0) {
+        
+        for (int i = 0; i < clouds.size(); i++) {
+            PVector cloud = clouds.get(i);
+            //rintangan bergerak kearah player
+            cloud.x-=diff;
+            image(awan,cloud.x,cloud.y,75,75);
+            //menghapus rintangan yang sudah keluar kanvas sehingga tidak memenuhi arraylist
+            if (cloud.x < -5) {
+                clouds.remove(i);
+            }
+            
+        }
     }
     
     if (boxes.size() != 0) {
@@ -76,6 +105,8 @@ void draw(){
             
         }
     }
+    
+    
 
     
 
@@ -90,9 +121,9 @@ void draw(){
 }
 
 void drawBackgroundGrid() {
-    stroke(255);
+    noStroke();
     strokeWeight(0.5);
-    noFill();
+    fill(127,173,113);
     if (x1 <= -width) {
         x1 = 0;
     } else { x1 -= diff; }
@@ -100,6 +131,7 @@ void drawBackgroundGrid() {
     for (int i = x1; i <= 2 * w; i += 40) {
         for (int j = (125 + h / 2); j <= h; j += 40) {
             rect(i, j, 40, 40); 
+            
         }
     }
 }

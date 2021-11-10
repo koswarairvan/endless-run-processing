@@ -55,7 +55,7 @@ class Player{
         image(gifGelembung[frameGelembung],pos.x-5,pos.y-5,65,65);
         if(powerTime>=299){
          back.stop();
-         powerup.play();
+         powerup.loop();
           }
         if(powerTime==0){  
         powerup.stop();

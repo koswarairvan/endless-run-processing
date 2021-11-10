@@ -7,7 +7,7 @@ Muhammad Dicky RNA
 */
 
 import processing.sound.*;
-SoundFile back,jump,lost,high,change,start;
+SoundFile back,jump,lost,high,change,start,powerup;
 PFont tulisan;
 String highscore[], tampung[];
 ArrayList<PVector> kotakRintang = new ArrayList<PVector>();
@@ -20,7 +20,7 @@ PImage[] kumpulanBg = new PImage[3];
 PImage[] runner= new PImage[7];
 PImage awan, logo, left, right, burgir, kebalBg;
 Player b = new Player();
-String chara="Ao", kiri="Momo", kanan="Cha";
+String chara="Ao", kiri="Cha", kanan="Momo";
 String rintangBaru = "Banteng", kebal = "kebal", bg = "bg";
 int jumpTime = 0,score ;
 int diff=14;
@@ -53,6 +53,14 @@ class Player{
 
     void kebal(){
         image(gifGelembung[frameGelembung],pos.x-5,pos.y-5,65,65);
+        if(powerTime>=299){
+         back.stop();
+         powerup.play();
+          }
+        if(powerTime==0){  
+        powerup.stop();
+        back.loop(1,0,3);
+        }
         if (frameCount%2==0){
             frameGelembung++;
         }
@@ -106,6 +114,7 @@ void setup(){
     high = new SoundFile(this,"highscore.mp3");
     change = new SoundFile(this,"change.wav");
     start = new SoundFile(this,"start.wav");
+    powerup = new SoundFile(this,"power.mp3");
     back.loop(1,0.3);
     textFont(tulisan);  
     
@@ -169,12 +178,50 @@ void keyPressed() {
     }
     if(keyCode==' ' && menu==1){
         start.play();
+        b.pos.y = h/ 1.6;
         menu=2; 
         frameCount=0;
     }
-    if(keyCode=='1' &&menu==1){chara="Momo";kiri="Ao";kanan="Cha"; changeChara();}
-    if(keyCode=='2' &&menu==1){chara="Ao"; kiri="Momo";kanan="Cha";changeChara();}
-    if(keyCode=='3' &&menu==1){chara="Cha";kiri="Momo";kanan="Ao"; changeChara();}
+    if(keyCode==LEFT &&menu==1){
+    if (chara=="Ao"){
+    chara="Cha";
+    kanan="Ao";
+    kiri="Momo";
+    changeChara();
+    }
+    else if (chara=="Cha"){
+    chara="Momo";
+    kanan="Cha";
+    kiri="Ao";
+    changeChara();
+    }
+    else if (chara=="Momo"){
+    chara="Ao";
+    kanan="Momo";
+    kiri="Cha";
+    changeChara();
+    }
+    }
+    else if(keyCode==RIGHT &&menu==1){
+    if (chara=="Ao"){
+    chara="Momo";
+    kanan="Cha";
+    kiri="Ao";
+    changeChara();
+    }
+    else if (chara=="Momo"){
+    chara="Cha";
+    kanan="Ao";
+    kiri="Momo";
+    changeChara();
+    }
+    else if (chara=="Cha"){
+    chara="Ao";
+    kanan="Momo";
+    kiri="Cha";
+    changeChara();
+    }
+    }
 }
 
 void mousePressed() {
@@ -247,7 +294,7 @@ void lost() {
 //reset game jika kalah.
 void resetGame() {
     menu = 2;
-    // back.loop(1,0.5);
+    back.loop(1,0.5);
     tint(255);
     kotakRintang.clear();
     bulls.clear();
@@ -265,6 +312,7 @@ void backToMenu(){
     back.loop(1,0.5);
     tint(255);
     kotakRintang.clear();
+    bulls.clear();
     lose = false;
     loop();
 }
@@ -327,7 +375,7 @@ void mainMenu() {
     fill(0);
     textSize(40);
     text("YOUR HIGHSCORE :" + int(highscore[0]), w/2, 40);
-
+    text("<- CHANGE CHARACTER ->", w/2, 160);
     if (chara=="Momo") {
         textSize(20);
         text("MOMO" , w/2, 190);
@@ -369,9 +417,14 @@ void gamePlay() {
     score=int(frameCount / 10);
     text("SCORE : " + score, w/2, 20);
     text("HIGHSCORE :" + int(highscore[0]), w/2, 40);
-    
-    text("KEY PRESS=JUMP", w - 70, 20);
+    text("SHIELD" ,30, 20);
+    text("SPACE=JUMP", w - 70, 20);
     text("CLICK=PAUSE", w - 70, 40);
+    rectMode(CORNER);
+    fill(255,0,0);
+    rect(10,30,powerTime/2,10);
+    rectMode(CENTER);
+    fill(255);
 
 
 
@@ -435,7 +488,7 @@ void gamePlay() {
             image(burgir, burger.x, burger.y, 25, 25);   
 
             if (burger.x - 50 <= 50 && b.pos.y == h/1.6 ) {
-                powerTime = 60*3;
+                powerTime = 60*5;
                 itemBurger.remove(i);
             }
 

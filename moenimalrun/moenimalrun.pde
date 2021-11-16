@@ -7,7 +7,7 @@ Muhammad Dicky RNA
 */
 
 import processing.sound.*;
-SoundFile back,jump,lost,high,change,start;
+SoundFile back,jump,lost,high,change,start,powerup,crunch;
 PFont tulisan;
 String highscore[], tampung[];
 ArrayList<PVector> kotakRintang = new ArrayList<PVector>();
@@ -20,15 +20,16 @@ PImage[] kumpulanBg = new PImage[3];
 PImage[] runner= new PImage[7];
 PImage awan, logo, left, right, burgir, kebalBg;
 Player b = new Player();
-String chara="Ao", kiri="Momo", kanan="Cha";
+String chara="Ao", kiri="Cha", kanan="Momo";
 String rintangBaru = "Banteng", kebal = "kebal", bg = "bg";
 int jumpTime = 0,score ;
 int diff=14;
-int diff2=25;
+int diff2=20;
 int x1=0;
 int w=600,h=400,frame=0,menu=1, frameBanteng=0, frameGelembung=0, frameBg = 0, powerTime = 0;
 boolean lose = false, pause = false;
-
+PShape bulan,matahari;
+PImage bul,mat;
 class Player{
     PVector pos; //posisi karakter
     PVector acc; //kecepatan karakter
@@ -37,7 +38,7 @@ class Player{
     Player(){
         pos = new PVector(50,(h / 1.6));
         vel = new PVector(0,0);
-        acc = new PVector(0,1);
+        acc = new PVector(0,0.1);
     }
 
     void tampil(){
@@ -53,6 +54,17 @@ class Player{
 
     void kebal(){
         image(gifGelembung[frameGelembung],pos.x-5,pos.y-5,65,65);
+        if(powerTime>=299){
+         back.stop();
+         powerup.loop();
+          }
+        if(powerTime==0){  
+        powerup.stop();
+        kotakRintang.clear();
+        bulls.clear();
+        back.loop(1,0,3);
+        
+        }
         if (frameCount%2==0){
             frameGelembung++;
         }
@@ -88,17 +100,8 @@ ArrayList<Rintangan> bulls = new ArrayList<Rintangan>();
 
 
 void setup(){
-    size(600,400);
-    frameRate(60);
-    rectMode(CENTER);
-    textAlign(CENTER);
-    awan=loadImage("cloud.png");
-    burgir=loadImage("Burgir.png");
-    kebalBg = loadImage("bgKebal.jpg");
-    logo=loadImage("logo.png");
-    left=loadImage(kiri+".gif");
-    right=loadImage(kanan+".gif");
-    tulisan = createFont("Pixeboy.ttf", 32);
+    hint(DISABLE_DEPTH_TEST);
+    size(600,400,P3D);
     highscore = loadStrings("highscore.txt");
     back= new SoundFile(this,"background.mp3");
     jump= new SoundFile(this,"jump.wav");
@@ -106,24 +109,43 @@ void setup(){
     high = new SoundFile(this,"highscore.mp3");
     change = new SoundFile(this,"change.wav");
     start = new SoundFile(this,"start.wav");
-    back.loop(1,0.3);
+    powerup = new SoundFile(this,"power.mp3");
+    crunch = new SoundFile(this,"crunch.wav");
+    awan=loadImage("cloud.png");
+    burgir=loadImage("Burgir.png");
+    kebalBg = loadImage("bgKebal.jpg");
+    logo=loadImage("logo.png");
+    left=loadImage(kiri+".gif");
+    right=loadImage(kanan+".gif");
+    tulisan = createFont("Pixeboy.ttf", 32);
+    bul = loadImage("bulan.jpg");
+    mat = loadImage("matahari.jpg");
+    bulan= createShape(SPHERE,RADIUS);
+    matahari= createShape(SPHERE,RADIUS);
+    bulan.setTexture(bul);
+    bulan.setStroke(false);
+    matahari.setTexture(mat);
+    matahari.setStroke(false);
     textFont(tulisan);  
-    
     for (int i = 0; i < kumpulanBg.length; i++) {
         kumpulanBg[i] = loadImage(bg+(i+1)+".png"); 
     }
 
-    for(int i = 0; i < runner.length; i++){
-        runner [i]= loadImage(chara+(i+1)+".gif");
+    for(int j = 0; j < runner.length; j++){
+        runner [j]= loadImage(chara+(j+1)+".gif");
     } 
 
-    for (int i = 0; i < gifBanteng.length; i++) {
-        gifBanteng[i] = loadImage(rintangBaru+(i+1)+".gif"); 
+    for (int k = 0; k < gifBanteng.length; k++) {
+        gifBanteng[k] = loadImage(rintangBaru+(k+1)+".gif"); 
     }
 
-    for (int i = 0; i < gifGelembung.length; i++) {
-        gifGelembung[i] = loadImage(kebal+(i+1)+".png"); 
+    for (int l = 0; l < gifGelembung.length; l++) {
+        gifGelembung[l] = loadImage(kebal+(l+1)+".png"); 
     }
+    frameRate(60);
+    rectMode(CENTER);
+    textAlign(CENTER);
+    back.loop(1,0.3);
 }
 
 void draw(){
@@ -152,12 +174,8 @@ void drawBackgroundGrid() {
     } else { 
         x1 -= diff;
     }
-    //membuat grid dibawah kaki player
-    for (int i = x1; i <= 2 * w; i += 40) {
-        for (int j = (125 + h / 2); j <= h; j += 40) {
-            rect(i, j, 40, 70);             
-        }
-    }
+    //membuat platform dibawah kaki player
+     rect(w/2,350,w,125);
 }
 
 
@@ -169,12 +187,50 @@ void keyPressed() {
     }
     if(keyCode==' ' && menu==1){
         start.play();
+        b.pos.y = h/ 1.6;
         menu=2; 
         frameCount=0;
     }
-    if(keyCode=='1' &&menu==1){chara="Momo";kiri="Ao";kanan="Cha"; changeChara();}
-    if(keyCode=='2' &&menu==1){chara="Ao"; kiri="Momo";kanan="Cha";changeChara();}
-    if(keyCode=='3' &&menu==1){chara="Cha";kiri="Momo";kanan="Ao"; changeChara();}
+    if(keyCode==LEFT &&menu==1){
+    if (chara=="Ao"){
+    chara="Cha";
+    kanan="Ao";
+    kiri="Momo";
+    changeChara();
+    }
+    else if (chara=="Cha"){
+    chara="Momo";
+    kanan="Cha";
+    kiri="Ao";
+    changeChara();
+    }
+    else if (chara=="Momo"){
+    chara="Ao";
+    kanan="Momo";
+    kiri="Cha";
+    changeChara();
+    }
+    }
+    else if(keyCode==RIGHT &&menu==1){
+    if (chara=="Ao"){
+    chara="Momo";
+    kanan="Cha";
+    kiri="Ao";
+    changeChara();
+    }
+    else if (chara=="Momo"){
+    chara="Cha";
+    kanan="Ao";
+    kiri="Momo";
+    changeChara();
+    }
+    else if (chara=="Cha"){
+    chara="Ao";
+    kanan="Momo";
+    kiri="Cha";
+    changeChara();
+    }
+    }
 }
 
 void mousePressed() {
@@ -208,11 +264,7 @@ void jump() {
 }
 
 void land() {
-    if (b.pos.y <= h / 2) {
-        b.vel.y += b.acc.y; //menarik player kebawah tanah
-    } else {
-        b.vel.y = 0;
-    }
+       b.pos.y = h/1.6;
 }
 
 void lost() {
@@ -246,8 +298,10 @@ void lost() {
 
 //reset game jika kalah.
 void resetGame() {
+    diff=14;
+    diff2=20;
     menu = 2;
-    // back.loop(1,0.5);
+    back.loop(1,0.5);
     tint(255);
     kotakRintang.clear();
     bulls.clear();
@@ -261,10 +315,13 @@ void resetGame() {
 
 //kembali ke main menu
 void backToMenu(){
+    diff=14;
+    diff2=20;
     menu = 1;
     back.loop(1,0.5);
     tint(255);
     kotakRintang.clear();
+    bulls.clear();
     lose = false;
     loop();
 }
@@ -327,7 +384,7 @@ void mainMenu() {
     fill(0);
     textSize(40);
     text("YOUR HIGHSCORE :" + int(highscore[0]), w/2, 40);
-
+    text("<- CHANGE CHARACTER ->", w/2, 160);
     if (chara=="Momo") {
         textSize(20);
         text("MOMO" , w/2, 190);
@@ -357,21 +414,50 @@ void gamePlay() {
         if (frameBg>2){
             frameBg=0;
         }
+        
+        
    
     } else {
         image(kebalBg, 0, 0, width, 305);
     }
     drawBackgroundGrid();
-
+    if (frameBg==0 && powerTime <=0){
+        stroke(255,0,0,128);
+        strokeWeight(20);
+        strokeCap(SQUARE);
+        noFill();
+        bezier(w/2-100,215,w/2-100,100,w/2+100,100,w/2+100,215);
+        stroke(255,255,0,128);
+        bezier(w/2-100,215,w/2-100,120,w/2+100,120,w/2+100,215);
+        stroke(0,255,0,128);
+        bezier(w/2-100,215,w/2-100,140,w/2+100,140,w/2+100,215);
+      }
+      
+      if (frameBg==1 && powerTime <=0){
+        pointLight(255, 129, 0,w/2,h/2,100);
+         shape(matahari,w/2,100,50,50);
+        
+      }
+      
+      if (frameBg==2 && powerTime <=0){
+        pointLight(255,255,255,w/2,100,100);
+        shape(bulan,w/2,100,50,50);
+      }
+        
     fill(255);
     textSize(20);
-    
+    noStroke();
     score=int(frameCount / 10);
     text("SCORE : " + score, w/2, 20);
     text("HIGHSCORE :" + int(highscore[0]), w/2, 40);
-    
-    text("KEY PRESS=JUMP", w - 70, 20);
+    text("SHIELD" ,30, 20);
+    text("SPACE=JUMP", w - 70, 20);
     text("CLICK=PAUSE", w - 70, 40);
+    rectMode(CORNER);
+    fill(255,0,0);
+    rect(10,30,powerTime/2,10);
+    rectMode(CENTER);
+    fill(255);
 
 
 
@@ -404,10 +490,10 @@ void gamePlay() {
                     tint(255);
                     break;	
                 case 1 :
-                    tint(255, 129, 0,128);
+                    tint(255, 129, 0);
                     break;
                 case 2 :
-                    tint(#003366, 128);
+                    tint(#003366);
             }
             image(awan,cloud.x,cloud.y,100,75);
             tint(255);
@@ -420,7 +506,7 @@ void gamePlay() {
     }
     
 
-    if (frameCount % 1000 == 0 ) {
+    if (frameCount % 750 == 0 ) {
         //membuat objek baru dari awan
         PVector burger = new PVector(width, 20+height/1.6);
         //memasukkan objek tadi ke arraylist kumpulan rintangan
@@ -435,7 +521,8 @@ void gamePlay() {
             image(burgir, burger.x, burger.y, 25, 25);   
 
             if (burger.x - 50 <= 50 && b.pos.y == h/1.6 ) {
-                powerTime = 60*3;
+                crunch.play();
+                powerTime = 60*5;
                 itemBurger.remove(i);
             }
 
@@ -508,11 +595,15 @@ void gamePlay() {
 
     //turun setelah lompat
     if (frameCount - jumpTime == 20) {
-        b.pos.y = h/1.6;
+         land();
     }
 
     b.tampil();
-    land();
+   
+   if(frameCount%1000==0){
+   diff+=1;
+   diff2+=1;
+   }
 
     if (powerTime > 0) {
         powerTime--;
